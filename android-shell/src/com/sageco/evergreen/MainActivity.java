@@ -36,7 +36,7 @@ import android.widget.TextView;
  * user-agent marker and serves its dedicated App Mode UI — identical
  * logo, screens and 100% of website functionality, always in sync.
  *
- * v3.1.0: native bottom menu + side drawer for fast navigation to any
+ * v3.1.1: native bottom menu + side drawer for fast navigation to any
  * section of the site. v3.0.1: loads the fast URL first with automatic
  * failover, loading progress bar, offline Retry screen.
  */
@@ -243,7 +243,6 @@ public class MainActivity extends Activity {
 
         bar.addView(tab("🏠", "Home", "/"));
         bar.addView(tab("🏘️", "Properties", "/properties"));
-        bar.addView(tab("🛒", "Market", "/market"));
         bar.addView(tab("👤", "Account", "/account"));
         bar.addView(tab("☰", "Menu", null)); // opens the side drawer
 
@@ -337,7 +336,6 @@ public class MainActivity extends Activity {
         String[][] items = {
             {"🏠", "Home", "/"},
             {"🏘️", "Properties", "/properties"},
-            {"🛒", "Market", "/market"},
             {"👥", "Brokers", "/brokers"},
             {"🤖", "AI Broker", "/ai-broker"},
             {"📏", "GPS Land Measure", "/gps-measure"},
