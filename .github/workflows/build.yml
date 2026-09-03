@@ -1,18 +1,15 @@
-name: Build & Sign APK
+name: Build SAGECO Evergreen APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Release APK
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -20,48 +17,34 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Decode Keystore
-        if: ${{ env.KEYSTORE_BASE64 != '' }}
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > ${{ github.workspace }}/property-masters.jks
-          echo "KEYSTORE_FILE=${{ github.workspace }}/property-masters.jks" >> $GITHUB_ENV
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/sageco.keystore
 
-      - name: Set Signing Env Vars
-        if: ${{ env.KEYSTORE_BASE64 != '' }}
+      - name: Build Release APK
+        working-directory: property-masters
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+          KEYSTORE_FILE: /tmp/sageco.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon -x lint
 
-      - name: Build Debug APK
-        if: ${{ env.KEYSTORE_BASE64 == '' }}
-        working-directory: property-masters
-        run: ./gradlew assembleDebug
-
-      - name: Build Signed Release APK
-        if: ${{ env.KEYSTORE_BASE64 != '' }}
-        working-directory: property-masters
-        run: ./gradlew assembleRelease
-
-      - name: Upload Debug APK
-        if: ${{ env.KEYSTORE_BASE64 == '' }}
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sageco-evergreen-android-debug
-          path: property-masters/app/build/outputs/apk/debug/*.apk
-          retention-days: 30
-
-      - name: Upload Release APK
-        if: ${{ env.KEYSTORE_BASE64 != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: sageco-evergreen-android-release
+          name: sageco-evergreen-apk
           path: property-masters/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v4.0.0-${{ github.run_number }}
+          name: SAGECO Evergreen v4.0.0
+          files: property-masters/app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

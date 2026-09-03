@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.PropertyMasters" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">#0A3D1F</item>
-        <item name="android:statusBarColor">#0A3D1F</item>
-        <item name="android:navigationBarColor">#0A3D1F</item>
+    <style name="Theme.SagecoEvergreen" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

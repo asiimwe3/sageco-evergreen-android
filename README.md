@@ -1,39 +1,27 @@
-# sageco-evergreen-android
+# SAGECO Evergreen Android
 
-📱 SAGECO EVERGREEN Android App — native Kotlin app for the SAGECO Evergreen real estate platform.
+Native Android app built with Jetpack Compose for the SAGECO Evergreen real estate platform.
 
-## 🚀 Features
+## Architecture
+- UI: Jetpack Compose with Material 3
+- Navigation: Navigation Compose with bottom navigation bar
+- Backend: Calls live API at sageco-evergreen-co.vercel.app (Vercel + Supabase)
+- Image loading: Coil
+- Local storage: DataStore Preferences (agent ID persistence)
 
-- Browse and search property listings
-- View broker directory and profiles
-- Register as a broker
-- Book property viewings
-- Add property listings
-- Subscription plans
-- Agent/MLM system with wallet & withdrawals
-- In-app auto-update
+## Features
+1. Home feed with featured properties and quick actions
+2. Property listings with search, filter, sort, and pagination
+3. Property detail with image gallery, contact actions
+4. Brokers directory with search
+5. MLM Agent network with wallet, downline, commissions, withdrawals
+6. Local AI chatbot (rule-based, no external LLM)
+7. Account screen with links to web features
 
-## 🛠️ Tech Stack
-
-| Category | Technology |
-|----------|-----------|
-| Language | Kotlin |
-| UI | Jetpack Compose |
-| Backend | Supabase / SAGECO Evergreen API |
-| Architecture | MVVM |
-
-## 📦 Build
-
-```bash
+## Build
 cd property-masters
 ./gradlew assembleRelease
-```
 
-## 📞 Contact
-
-**Asiimwe Derick**
-- GitHub: [@asiimwe3](https://github.com/asiimwe3)
-
----
-
-<p align="center">Made with ❤️ in Uganda 🇺🇬</p>
+Package: com.sagecoevergreen.app
+Min SDK: 24 (Android 7.0)
+Target SDK: 34 (Android 14)
