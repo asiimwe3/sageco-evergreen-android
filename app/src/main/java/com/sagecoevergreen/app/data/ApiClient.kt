@@ -189,6 +189,27 @@ object ApiClient {
         return arr.optString(index).ifBlank { null }
     }
 
+    /**
+     * Safely get a nullable Double from JSONObject.
+     * Uses has() + isNull() checks instead of takeIf { it != 0.0 }
+     * because 0.0 is a valid coordinate (Uganda is on the equator).
+     */
+    private fun optNullableDouble(j: JSONObject, key: String): Double? {
+        if (!j.has(key)) return null
+        if (j.isNull(key)) return null
+        return j.optDouble(key)
+    }
+
+    /**
+     * Safely get a nullable Boolean from JSONObject.
+     */
+    private fun optNullableBoolean(j: JSONObject, key: String): Boolean? {
+        if (!j.has(key)) return null
+        if (j.isNull(key)) return null
+        return j.optBoolean(key)
+    }
+
+    // FIX #3: Added HTTP error response handling
     private fun fetchJson(url: String): JSONObject {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = 20000
@@ -196,13 +217,23 @@ object ApiClient {
         conn.setRequestProperty("User-Agent", "SagecoApp/4.0 Android")
         conn.setRequestProperty("Accept", "application/json")
         try {
-            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            val code = conn.responseCode
+            val body = if (code in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else {
+                val errBody = try { conn.errorStream?.bufferedReader()?.use { it.readText() } } catch (_: Exception) { null }
+                return JSONObject().apply {
+                    put("error", "Server error: $code")
+                    errBody?.let { put("message", it.take(200)) }
+                }
+            }
             return JSONObject(body)
         } finally {
             conn.disconnect()
         }
     }
 
+    // FIX #3: Added HTTP error response handling
     private fun postJson(url: String, body: JSONObject): JSONObject {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
@@ -214,7 +245,16 @@ object ApiClient {
         conn.setRequestProperty("User-Agent", "SagecoApp/4.0 Android")
         try {
             conn.outputStream.use { it.write(body.toString().toByteArray()) }
-            val response = conn.inputStream.bufferedReader().use { it.readText() }
+            val code = conn.responseCode
+            val response = if (code in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else {
+                val errBody = try { conn.errorStream?.bufferedReader()?.use { it.readText() } } catch (_: Exception) { null }
+                return JSONObject().apply {
+                    put("error", "Server error: $code")
+                    errBody?.let { put("message", it.take(200)) }
+                }
+            }
             return JSONObject(response)
         } finally {
             conn.disconnect()
@@ -222,6 +262,19 @@ object ApiClient {
     }
 
     private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8")
+
+    // FIX #2: Helper to normalize Ugandan phone numbers for WhatsApp
+    fun normalizePhoneForWhatsApp(phone: String?): String? {
+        if (phone.isNullOrBlank()) return null
+        var p = phone.replace(" ", "").replace("-", "").trim()
+        when {
+            p.startsWith("+256") -> p = p.substring(1) // +256772... → 256772...
+            p.startsWith("256") -> { } // already correct
+            p.startsWith("0") -> p = "256" + p.substring(1) // 0772... → 256772...
+            else -> p = "256$p" // bare number → 256 + number
+        }
+        return p
+    }
 
     private fun parseProperty(j: JSONObject): Property {
         val imagesArr = j.optJSONArray("images")
@@ -253,16 +306,19 @@ object ApiClient {
             broker_name = optNullableString(j, "broker_name"),
             land_acres = j.optDouble("land_acres", 0.0).takeIf { it > 0 },
             plot_feet = optNullableString(j, "plot_feet"),
-            water_available = if (j.has("water_available") && !j.isNull("water_available")) j.optBoolean("water_available") else null,
-            electricity_available = if (j.has("electricity_available") && !j.isNull("electricity_available")) j.optBoolean("electricity_available") else null,
+            water_available = optNullableBoolean(j, "water_available"),
+            electricity_available = optNullableBoolean(j, "electricity_available"),
             road_distance_km = j.optDouble("road_distance_km", 0.0).takeIf { it > 0 },
             fence = optNullableString(j, "fence"),
             title_deed = optNullableString(j, "title_deed"),
-            is_negotiable = j.optBoolean("is_negotiable", false),
+            // FIX #6: Use optNullableBoolean for consistency with nullable model field
+            is_negotiable = optNullableBoolean(j, "is_negotiable"),
             contact_name = optNullableString(j, "contact_name"),
             contact_phone = optNullableString(j, "contact_phone"),
-            latitude = j.optDouble("latitude", 0.0).takeIf { it != 0.0 },
-            longitude = j.optDouble("longitude", 0.0).takeIf { it != 0.0 },
+            // FIX #4: Use optNullableDouble instead of takeIf { it != 0.0 }
+            // 0.0 is valid for latitude (equator passes through Uganda)
+            latitude = optNullableDouble(j, "latitude"),
+            longitude = optNullableDouble(j, "longitude"),
             views = j.optInt("views", 0),
             eco_score = j.optInt("eco_score", 0).takeIf { it > 0 },
             valuation_estimate = j.optLong("valuation_estimate", 0).takeIf { it > 0 },
@@ -282,7 +338,7 @@ object ApiClient {
         location = optNullableString(j, "location"),
         specialization = optNullableString(j, "specialization"),
         registration_status = optNullableString(j, "registration_status"),
-        verified = if (j.has("verified") && !j.isNull("verified")) j.optBoolean("verified") else null,
+        verified = optNullableBoolean(j, "verified"),
         plan = optNullableString(j, "plan")
     )
 

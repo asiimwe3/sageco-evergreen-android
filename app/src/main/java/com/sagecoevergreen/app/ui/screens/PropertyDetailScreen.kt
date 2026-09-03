@@ -47,6 +47,8 @@ fun PropertyDetailScreen(
     var currentImageIndex by remember { mutableStateOf(0) }
 
     LaunchedEffect(propertyId) {
+        // FIX #5: Reset image index when navigating to a new property
+        currentImageIndex = 0
         scope.launch {
             loading = true
             error = null
@@ -299,9 +301,10 @@ fun PropertyDetailScreen(
                         }
                         Button(
                             onClick = {
-                                val phone = prop.contact_phone?.replace(" ", "") ?: ""
+                                // FIX #2: Use normalizePhoneForWhatsApp instead of manual string manipulation
+                                val phone = ApiClient.normalizePhoneForWhatsApp(prop.contact_phone)
                                 val msg = "I'm interested in: ${prop.title} (${formatPrice(prop.price)})"
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/256${phone.trimStart('0')}?text=${Uri.encode(msg)}"))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/${phone}?text=${Uri.encode(msg)}"))
                                 context.startActivity(intent)
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = White),
