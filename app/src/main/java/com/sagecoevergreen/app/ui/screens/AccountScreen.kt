@@ -1,5 +1,7 @@
 package com.sagecoevergreen.app.ui.screens
 
+import com.sagecoevergreen.app.BuildConfig
+
 import androidx.compose.ui.graphics.Color
 import android.content.Intent
 import android.net.Uri
@@ -158,9 +160,27 @@ fun AccountScreen(
                 Text("Kyenjojo, Western Uganda", fontSize = 13.sp, color = Gray600)
                 Text("Mon–Sat, 8:00 AM – 6:00 PM EAT", fontSize = 13.sp, color = Gray600)
                 Spacer(modifier = Modifier.height(8.dp))
-                version?.let {
-                    Text("App Version: ${it.versionName} (${it.versionCode})", fontSize = 12.sp, color = Gray400)
-                } ?: Text("App Version: 4.0.0 (10)", fontSize = 12.sp, color = Gray400)
+                Text(
+                    "App Version: ${BuildConfig.BUILD_VERSION_NAME} (build ${BuildConfig.BUILD_VERSION_CODE})",
+                    fontSize = 12.sp, color = Gray400
+                )
+                version?.let { latest ->
+                    if (latest.versionCode > BuildConfig.BUILD_VERSION_CODE) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "⚠️ Update available: build ${latest.versionCode} — tap to download",
+                            fontSize = 12.sp, color = Color(0xFFDC2626), fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable {
+                                latest.apkUrl?.let { url ->
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                }
+                            }
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("✅ You're on the latest version", fontSize = 12.sp, color = Color(0xFF16A34A))
+                    }
+                }
             }
         }
 

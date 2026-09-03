@@ -11,11 +11,18 @@ android {
         applicationId = "com.sagecoevergreen.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 10
+        // versionCode comes from CI (GitHub run number) so every build is uniquely
+        // identifiable and auto-update/version checks work correctly.
+        // Falls back to 27 for local/manual builds.
+        versionCode = (System.getenv("APP_VERSION_CODE")?.toIntOrNull()) ?: 27
         versionName = "4.0.0"
+
+        buildConfigField("int", "BUILD_VERSION_CODE", "$versionCode")
+        buildConfigField("String", "BUILD_VERSION_NAME", "\"$versionName\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
 
     signingConfigs {
         create("release") {
@@ -58,6 +65,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"
