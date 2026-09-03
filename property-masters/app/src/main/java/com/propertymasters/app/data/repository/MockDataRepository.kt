@@ -290,7 +290,7 @@ object MockDataRepository {
             listingsCount = 32,
             bio = "Alice has over 12 years of experience in the luxury real estate market. She specializes in high-end villas and penthouses across Kampala and Entebbe. Her clients include diplomats, executives, and investors.",
             phone = "+256 772 100 200",
-            email = "alice@propertymasters.com",
+            email = "alice@sagecoevergreen.com",
             experienceYears = 12,
             languages = listOf("English", "Luganda", "Swahili"),
             areasServed = listOf("Kampala", "Entebbe", "Jinja")
@@ -305,7 +305,7 @@ object MockDataRepository {
             listingsCount = 27,
             bio = "David is a commercial real estate expert with a background in finance. He helps businesses find the perfect retail, office, and industrial spaces. Known for his data-driven approach and strong negotiation skills.",
             phone = "+256 772 100 201",
-            email = "david@propertymasters.com",
+            email = "david@sagecoevergreen.com",
             experienceYears = 9,
             languages = listOf("English", "Luganda"),
             areasServed = listOf("Kampala", "Mukono")
@@ -318,9 +318,9 @@ object MockDataRepository {
             reviewCount = 156,
             photoUrl = "https://randomuser.me/api/portraits/women/68.jpg",
             listingsCount = 41,
-            bio = "Grace is the top-rated broker at Property Masters. She specializes in residential properties and rental management. Her personalized approach has earned her a loyal client base of families and young professionals.",
+            bio = "Grace is the top-rated broker at SAGECO EVERGREEN. She specializes in residential properties and rental management. Her personalized approach has earned her a loyal client base of families and young professionals.",
             phone = "+256 772 100 202",
-            email = "grace@propertymasters.com",
+            email = "grace@sagecoevergreen.com",
             experienceYears = 10,
             languages = listOf("English", "Luganda", "Runyoro", "Swahili"),
             areasServed = listOf("Kampala", "Mukono", "Wakiso")
@@ -335,7 +335,7 @@ object MockDataRepository {
             listingsCount = 19,
             bio = "Samuel focuses on new developments and off-plan investments. He works closely with developers to bring exclusive pre-launch deals to his clients. A trusted advisor for first-time homebuyers.",
             phone = "+256 772 100 203",
-            email = "samuel@propertymasters.com",
+            email = "samuel@sagecoevergreen.com",
             experienceYears = 7,
             languages = listOf("English", "Luganda", "Swahili"),
             areasServed = listOf("Kampala", "Kira", "Mukono")
@@ -350,7 +350,7 @@ object MockDataRepository {
             listingsCount = 22,
             bio = "Patricia brings a background in interior design to her real estate practice. She has a keen eye for properties with potential and helps clients envision the possibilities. Specializes in countryside and lakeside properties.",
             phone = "+256 772 100 204",
-            email = "patricia@propertymasters.com",
+            email = "patricia@sagecoevergreen.com",
             experienceYears = 6,
             languages = listOf("English", "Luganda", "Luo"),
             areasServed = listOf("Kampala", "Entebbe", "Jinja")
@@ -361,7 +361,7 @@ object MockDataRepository {
         Job(
             id = "j1",
             title = "Senior Real Estate Agent",
-            company = "Property Masters Realty",
+            company = "SAGECO EVERGREEN",
             location = "Kampala, Uganda",
             jobType = "Full-time",
             salary = "$1,200 - $2,000/mo",
@@ -370,7 +370,7 @@ object MockDataRepository {
             description = "We are seeking an experienced real estate agent to join our growing team. You will be responsible for managing client relationships, conducting property viewings, and closing deals. This is a commission-enhanced role with a strong base salary.",
             requirements = listOf("Minimum 3 years real estate experience", "Valid real estate license", "Strong communication skills", "Own smartphone and transport", "Knowledge of Kampala property market"),
             responsibilities = listOf("Manage client property listings", "Conduct property viewings and open houses", "Negotiate and close deals", "Maintain client relationships", "Prepare and submit contracts"),
-            contactEmail = "careers@propertymasters.com",
+            contactEmail = "careers@sagecoevergreen.com",
             contactPhone = "+256 776 004 277",
             logoUrl = ""
         ),
@@ -425,7 +425,7 @@ object MockDataRepository {
         Job(
             id = "j5",
             title = "Leasing Agent",
-            company = "Property Masters Realty",
+            company = "SAGECO EVERGREEN",
             location = "Mukono, Uganda",
             jobType = "Part-time",
             salary = "$400 - $700/mo",
@@ -434,7 +434,7 @@ object MockDataRepository {
             description = "Part-time leasing agent role managing rental properties in Mukono. Flexible hours, ideal for someone with another primary income source. Commission on each signed lease.",
             requirements = listOf("Good communication skills", "Knowledge of Mukono area", "Smartphone and WhatsApp", "Customer service experience"),
             responsibilities = listOf("Show rental properties to tenants", "Process lease applications", "Conduct move-in/move-out inspections", "Collect rent", "Handle tenant inquiries"),
-            contactEmail = "leasing@propertymasters.com",
+            contactEmail = "leasing@sagecoevergreen.com",
             contactPhone = "+256 776 004 277",
             logoUrl = ""
         ),
@@ -461,7 +461,7 @@ object MockDataRepository {
 
     val currentUser = UserProfile(
         name = "Sarah Miller",
-        email = "sarah.miller@propertymasters.com",
+        email = "sarah.miller@sagecoevergreen.com",
         photoUrl = "https://randomuser.me/api/portraits/women/65.jpg",
         isVerified = true,
         phone = "+256 772 555 999",

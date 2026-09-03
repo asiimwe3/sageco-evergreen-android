@@ -78,7 +78,7 @@ fun LoginScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Property Masters", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("SAGECO EVERGREEN", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Text(
                 if (isSignup) "Create your account" else "Welcome back",
                 fontSize = 14.sp,

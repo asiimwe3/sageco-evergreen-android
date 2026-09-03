@@ -226,7 +226,7 @@ fun AccountScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Property Masters v1.0.0", fontSize = 12.sp, color = TextMuted, modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text("SAGECO EVERGREEN v1.0.0", fontSize = 12.sp, color = TextMuted, modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }
 }
