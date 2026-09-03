@@ -113,6 +113,7 @@ fun BrokersScreen() {
 
 @Composable
 private fun BrokerCard(broker: Broker, onCall: () -> Unit) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
