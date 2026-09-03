@@ -23,7 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sagecoevergreen.app.data.ApiClient
 import com.sagecoevergreen.app.data.Broker
 import com.sagecoevergreen.app.ui.components.*
@@ -119,12 +121,27 @@ private fun BrokerCard(broker: Broker, onCall: () -> Unit) {
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             // Avatar
-            if (broker.photo_url != null) {
-                AsyncImage(
-                    model = broker.photo_url,
+            if (broker.photo_url != null && broker.photo_url.startsWith("http")) {
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(broker.photo_url)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = broker.full_name,
                     modifier = Modifier.size(56.dp).clip(CircleShape),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    loading = {
+                        Box(Modifier.fillMaxSize().background(SagecoGreen.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(20.dp), color = SagecoGreen)
+                        }
+                    },
+                    error = {
+                        Surface(shape = CircleShape, color = SagecoGreen.copy(alpha = 0.15f), modifier = Modifier.size(56.dp)) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(broker.full_name.take(2).uppercase(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SagecoGreen)
+                            }
+                        }
+                    }
                 )
             } else {
                 Surface(shape = CircleShape, color = SagecoGreen.copy(alpha = 0.15f), modifier = Modifier.size(56.dp)) {

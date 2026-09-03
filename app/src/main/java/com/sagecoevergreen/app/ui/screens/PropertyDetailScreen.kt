@@ -23,7 +23,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sagecoevergreen.app.data.ApiClient
 import com.sagecoevergreen.app.data.Property
 import com.sagecoevergreen.app.ui.components.*

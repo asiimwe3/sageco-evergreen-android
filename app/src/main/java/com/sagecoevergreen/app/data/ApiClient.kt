@@ -6,6 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 import java.net.URLEncoder
+import java.net.HttpURLConnection
 
 object ApiClient {
     private const val BASE_URL = "https://sageco-evergreen-co.vercel.app"
@@ -84,9 +85,9 @@ object ApiClient {
             commissions.add(Commission(
                 id = c.optString("id"),
                 amount = c.optLong("amount"),
-                type = c.optString("type", null),
-                status = c.optString("status", null),
-                created_at = c.optString("created_at", null)
+                type = optNullableString(c, "type"),
+                status = optNullableString(c, "status"),
+                created_at = optNullableString(c, "created_at")
             ))
         }
 
@@ -137,9 +138,9 @@ object ApiClient {
             list.add(Withdrawal(
                 id = w.optString("id"),
                 amount = w.optLong("amount"),
-                method = w.optString("method", "mobile_money"),
-                status = w.optString("status", "pending"),
-                created_at = w.optString("created_at", null)
+                method = optNullableString(w, "method") ?: "mobile_money",
+                status = optNullableString(w, "status") ?: "pending",
+                created_at = optNullableString(w, "created_at")
             ))
         }
         val balance = if (json.has("balance")) json.optLong("balance") else null
@@ -151,7 +152,7 @@ object ApiClient {
         val json = postJson("$BASE_URL/api/chat", JSONObject().apply {
             put("message", message)
         })
-        json.optString("reply", json.optString("error", "Sorry, I couldn't process that."))
+        optNullableString(json, "reply") ?: optNullableString(json, "error") ?: "Sorry, I couldn't process that."
     }
 
     // ── App version ─────────────────────────────────────────────
@@ -161,34 +162,63 @@ object ApiClient {
             AppVersion(
                 versionCode = json.optInt("versionCode"),
                 versionName = json.optString("versionName"),
-                apkUrl = json.optString("apkUrl", null),
+                apkUrl = optNullableString(json, "apkUrl"),
                 forceUpdate = json.optBoolean("forceUpdate", false),
-                notes = json.optString("notes", null)
+                notes = optNullableString(json, "notes")
             )
         } catch (_: Exception) { null }
     }
 
     // ── Helpers ─────────────────────────────────────────────────
+
+    /**
+     * Safely get a nullable String from JSONObject.
+     * Android's optString(key, null) returns the literal string "null"
+     * when the JSON value is null, not Java null. This helper checks
+     * isNull() first to return a proper null.
+     */
+    private fun optNullableString(j: JSONObject, key: String): String? {
+        if (!j.has(key)) return null
+        if (j.isNull(key)) return null
+        val s = j.optString(key)
+        return s.ifBlank { null }
+    }
+
+    private fun optNullableString(arr: JSONArray, index: Int): String? {
+        if (arr.isNull(index)) return null
+        return arr.optString(index).ifBlank { null }
+    }
+
     private fun fetchJson(url: String): JSONObject {
-        val conn = URL(url).openConnection()
-        conn.connectTimeout = 15000
-        conn.readTimeout = 15000
+        val conn = URL(url).openConnection() as HttpURLConnection
+        conn.connectTimeout = 20000
+        conn.readTimeout = 20000
         conn.setRequestProperty("User-Agent", "SagecoApp/4.0 Android")
-        val body = conn.getInputStream().bufferedReader().use { it.readText() }
-        return JSONObject(body)
+        conn.setRequestProperty("Accept", "application/json")
+        try {
+            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            return JSONObject(body)
+        } finally {
+            conn.disconnect()
+        }
     }
 
     private fun postJson(url: String, body: JSONObject): JSONObject {
-        val conn = URL(url).openConnection() as java.net.HttpURLConnection
+        val conn = URL(url).openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
-        conn.connectTimeout = 15000
-        conn.readTimeout = 15000
+        conn.connectTimeout = 20000
+        conn.readTimeout = 20000
         conn.doOutput = true
         conn.setRequestProperty("Content-Type", "application/json")
+        conn.setRequestProperty("Accept", "application/json")
         conn.setRequestProperty("User-Agent", "SagecoApp/4.0 Android")
-        conn.outputStream.use { it.write(body.toString().toByteArray()) }
-        val response = conn.inputStream.bufferedReader().use { it.readText() }
-        return JSONObject(response)
+        try {
+            conn.outputStream.use { it.write(body.toString().toByteArray()) }
+            val response = conn.inputStream.bufferedReader().use { it.readText() }
+            return JSONObject(response)
+        } finally {
+            conn.disconnect()
+        }
     }
 
     private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8")
@@ -198,69 +228,75 @@ object ApiClient {
         val images = mutableListOf<String>()
         if (imagesArr != null) {
             for (i in 0 until imagesArr.length()) {
-                images.add(imagesArr.getString(i))
+                val img = optNullableString(imagesArr, i)
+                if (img != null && img.startsWith("http")) {
+                    images.add(img)
+                }
             }
+        }
+        if (images.isEmpty()) {
+            optNullableString(j, "image_url")?.let { if (it.startsWith("http")) images.add(it) }
         }
         return Property(
             id = j.optString("id"),
             title = j.optString("title"),
-            description = j.optString("description", null),
+            description = optNullableString(j, "description"),
             price = j.optLong("price"),
-            location = j.optString("location", null),
-            category = j.optString("category", null),
+            location = optNullableString(j, "location"),
+            category = optNullableString(j, "category"),
             bedrooms = j.optInt("bedrooms", 0).takeIf { it > 0 },
             bathrooms = j.optInt("bathrooms", 0).takeIf { it > 0 },
             area_sqft = j.optDouble("area_sqft", 0.0).takeIf { it > 0 },
             images = images.ifEmpty { null },
-            status = j.optString("status", null),
+            status = optNullableString(j, "status"),
             featured = j.optBoolean("featured", false),
-            broker_name = j.optString("broker_name", null),
+            broker_name = optNullableString(j, "broker_name"),
             land_acres = j.optDouble("land_acres", 0.0).takeIf { it > 0 },
-            plot_feet = j.optString("plot_feet", null),
-            water_available = j.optBoolean("water_available", false).takeIf { j.has("water_available") },
-            electricity_available = j.optBoolean("electricity_available", false).takeIf { j.has("electricity_available") },
+            plot_feet = optNullableString(j, "plot_feet"),
+            water_available = if (j.has("water_available") && !j.isNull("water_available")) j.optBoolean("water_available") else null,
+            electricity_available = if (j.has("electricity_available") && !j.isNull("electricity_available")) j.optBoolean("electricity_available") else null,
             road_distance_km = j.optDouble("road_distance_km", 0.0).takeIf { it > 0 },
-            fence = j.optString("fence", null),
-            title_deed = j.optString("title_deed", null),
+            fence = optNullableString(j, "fence"),
+            title_deed = optNullableString(j, "title_deed"),
             is_negotiable = j.optBoolean("is_negotiable", false),
-            contact_name = j.optString("contact_name", null),
-            contact_phone = j.optString("contact_phone", null),
+            contact_name = optNullableString(j, "contact_name"),
+            contact_phone = optNullableString(j, "contact_phone"),
             latitude = j.optDouble("latitude", 0.0).takeIf { it != 0.0 },
             longitude = j.optDouble("longitude", 0.0).takeIf { it != 0.0 },
             views = j.optInt("views", 0),
             eco_score = j.optInt("eco_score", 0).takeIf { it > 0 },
             valuation_estimate = j.optLong("valuation_estimate", 0).takeIf { it > 0 },
-            title_number = j.optString("title_number", null),
-            tenure_type = j.optString("tenure_type", null),
-            created_at = j.optString("created_at", null)
+            title_number = optNullableString(j, "title_number"),
+            tenure_type = optNullableString(j, "tenure_type"),
+            created_at = optNullableString(j, "created_at")
         )
     }
 
     private fun parseBroker(j: JSONObject): Broker = Broker(
         id = j.optString("id"),
-        full_name = j.optString("full_name"),
-        email = j.optString("email", null),
-        phone = j.optString("phone", null),
-        photo_url = j.optString("photo_url", null),
-        bio = j.optString("bio", null),
-        location = j.optString("location", null),
-        specialization = j.optString("specialization", null),
-        registration_status = j.optString("registration_status", null),
-        verified = j.optBoolean("verified", false),
-        plan = j.optString("plan", null)
+        full_name = optNullableString(j, "full_name") ?: "Unknown",
+        email = optNullableString(j, "email"),
+        phone = optNullableString(j, "phone"),
+        photo_url = optNullableString(j, "photo_url"),
+        bio = optNullableString(j, "bio"),
+        location = optNullableString(j, "location"),
+        specialization = optNullableString(j, "specialization"),
+        registration_status = optNullableString(j, "registration_status"),
+        verified = if (j.has("verified") && !j.isNull("verified")) j.optBoolean("verified") else null,
+        plan = optNullableString(j, "plan")
     )
 
     private fun parseAgent(j: JSONObject): Agent = Agent(
         id = j.optString("id"),
-        full_name = j.optString("full_name"),
-        phone = j.optString("phone", null),
-        email = j.optString("email", null),
-        location = j.optString("location", null),
+        full_name = optNullableString(j, "full_name") ?: "Unknown",
+        phone = optNullableString(j, "phone"),
+        email = optNullableString(j, "email"),
+        location = optNullableString(j, "location"),
         level = j.optInt("level", 1),
-        group_name = j.optString("group_name", null),
-        registration_status = j.optString("registration_status", null),
+        group_name = optNullableString(j, "group_name"),
+        registration_status = optNullableString(j, "registration_status"),
         downline_count = j.optInt("downline_count", 0),
         total_earnings = j.optLong("total_earnings", 0),
-        created_at = j.optString("created_at", null)
+        created_at = optNullableString(j, "created_at")
     )
 }

@@ -18,7 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.sagecoevergreen.app.data.Property
 import com.sagecoevergreen.app.ui.theme.*
 
@@ -27,6 +29,54 @@ fun formatPrice(price: Long): String {
         price >= 1_000_000 -> "UGX ${(price / 1_000_000.0).let { if (it % 1 == 0.0) it.toInt().toString() + "M" else String.format("%.1fM", it) }}"
         price >= 1_000 -> "UGX ${price / 1_000}K"
         else -> "UGX $price"
+    }
+}
+
+@Composable
+fun PropertyImage(
+    url: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(0.dp)
+) {
+    val context = LocalContext.current
+    if (url != null && url.startsWith("http")) {
+        SubcomposeAsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(url)
+                .crossfade(true)
+                .build(),
+            contentDescription = contentDescription,
+            modifier = modifier.clip(shape),
+            contentScale = ContentScale.Crop,
+            loading = {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Gray100),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = SagecoGreen,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            error = {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Gray200),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Home, null, tint = Gray400, modifier = Modifier.size(40.dp))
+                }
+            }
+        )
+    } else {
+        Box(
+            modifier = modifier.background(Gray200),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.Home, null, tint = Gray400, modifier = Modifier.size(40.dp))
+        }
     }
 }
 
@@ -41,29 +91,12 @@ fun PropertyCard(property: Property, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Image
-            val img = property.images?.firstOrNull()
-            if (img != null) {
-                AsyncImage(
-                    model = img,
-                    contentDescription = property.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .background(Gray200),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Home, null, tint = Gray400, modifier = Modifier.size(48.dp))
-                }
-            }
+            PropertyImage(
+                url = property.images?.firstOrNull(),
+                contentDescription = property.title,
+                modifier = Modifier.fillMaxWidth().height(180.dp),
+                shape = RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)
+            )
 
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(
@@ -111,7 +144,6 @@ fun PropertyCard(property: Property, onClick: () -> Unit) {
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                // Property details row
                 val details = mutableListOf<String>()
                 property.bedrooms?.let { details.add("$it bed") }
                 property.bathrooms?.let { details.add("$it bath") }

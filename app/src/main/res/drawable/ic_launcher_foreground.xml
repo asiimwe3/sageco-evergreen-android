@@ -3,7 +3,20 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- House roof -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,24 L84,50 L78,50 L78,84 L60,84 L60,64 L48,64 L48,84 L30,84 L30,50 L24,50 Z" />
+        android:pathData="M54,28 L78,48 L30,48 Z" />
+    <!-- House body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,48 L72,48 L72,78 L36,78 Z" />
+    <!-- Door (cut out using bg color) -->
+    <path
+        android:fillColor="#1a5c38"
+        android:pathData="M48,60 L60,60 L60,78 L48,78 Z" />
+    <!-- SE text representation as small rectangles -->
+    <path
+        android:fillColor="#9AE66E"
+        android:pathData="M42,82 L66,82 L66,86 L42,86 Z" />
 </vector>
