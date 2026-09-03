@@ -23,11 +23,9 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/sageco.keystore
 
       - name: Grant execute permission for gradlew
-        working-directory: property-masters
         run: chmod +x gradlew
 
       - name: Build Release APK
-        working-directory: property-masters
         env:
           KEYSTORE_FILE: /tmp/sageco.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -39,7 +37,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sageco-evergreen-apk
-          path: property-masters/app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/release/*.apk
 
       - name: Create Release
         if: github.ref == 'refs/heads/main'
@@ -47,6 +45,6 @@ jobs:
         with:
           tag_name: v4.0.0-${{ github.run_number }}
           name: SAGECO Evergreen v4.0.0
-          files: property-masters/app/build/outputs/apk/release/*.apk
+          files: app/build/outputs/apk/release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,18 +1,10 @@
-# Gradle
+*.jks
+*.keystore
+google-services.json
+!google-services.json.template
+keystore-b64.txt
+*.apk
+
 .gradle/
 build/
-
-# Android
-*.apk
-*.aab
-*.jks
 local.properties
-
-# IDE
-.idea/
-*.iml
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
