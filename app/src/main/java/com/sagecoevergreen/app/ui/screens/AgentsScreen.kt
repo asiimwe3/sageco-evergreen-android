@@ -1,5 +1,6 @@
 package com.sagecoevergreen.app.ui.screens
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -311,12 +312,12 @@ private fun AgentRegisterSheet(
         }
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Registration Fee: UGX 30,000", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Gold)
-            OutlinedTextField(fullName, { fullName = it }, { Text("Full Name *") }, Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(phone, { phone = it }, { Text("Phone *") }, Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(email, { email = it }, { Text("Email") }, Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(location, { location = it }, { Text("Location") }, Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(bio, { bio = it }, { Text("Bio / Experience") }, Modifier.fillMaxWidth(), maxLines = 3)
-            OutlinedTextField(sponsorId, { sponsorId = it }, { Text("Sponsor Agent ID (optional)") }, Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(fullName, { fullName = it }, label = { Text("Full Name *") }, Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(phone, { phone = it }, label = { Text("Phone *") }, Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(email, { email = it }, label = { Text("Email") }, Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(location, { location = it }, label = { Text("Location") }, Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(bio, { bio = it }, label = { Text("Bio / Experience") }, Modifier.fillMaxWidth(), maxLines = 3)
+            OutlinedTextField(sponsorId, { sponsorId = it }, label = { Text("Sponsor Agent ID (optional)") }, Modifier.fillMaxWidth(), singleLine = true)
             errorMsg?.let { Text(it, color = Red, fontSize = 13.sp) }
             Button(
                 onClick = {
@@ -387,7 +388,7 @@ private fun WithdrawSheet(
                     Text("UGX ${dashboard.wallet_balance}", fontSize = 22.sp, fontWeight = FontWeight.Black, color = SagecoGreen)
                 }
             }
-            OutlinedTextField(amount, { amount = it }, { Text("Amount (UGX) *") }, Modifier.fillMaxWidth(), singleLine = true)
+            OutlinedTextField(amount, { amount = it }, label = { Text("Amount (UGX) *") }, Modifier.fillMaxWidth(), singleLine = true)
             Text("Withdrawal Method", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Gray800)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("mobile_money" to "Mobile Money", "bank" to "Bank", "cash" to "Cash").forEach { (val_, label) ->
@@ -403,10 +404,10 @@ private fun WithdrawSheet(
                 }
             }
             if (method == "mobile_money") {
-                OutlinedTextField(phone, { phone = it }, { Text("Phone Number") }, Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(phone, { phone = it }, label = { Text("Phone Number") }, Modifier.fillMaxWidth(), singleLine = true)
             }
             if (method == "bank") {
-                OutlinedTextField(accountName, { accountName = it }, { Text("Account Name") }, Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(accountName, { accountName = it }, label = { Text("Account Name") }, Modifier.fillMaxWidth(), singleLine = true)
             }
             errorMsg?.let { Text(it, color = Red, fontSize = 13.sp) }
             Button(
