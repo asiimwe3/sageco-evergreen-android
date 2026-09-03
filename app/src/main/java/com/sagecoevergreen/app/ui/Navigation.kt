@@ -24,6 +24,7 @@ import com.sagecoevergreen.app.ui.theme.*
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)
     data object Properties : Screen("properties", "Properties", Icons.Default.Domain)
+    data object Brokers : Screen("brokers", "Brokers", Icons.Default.Handshake)
     data object Agents : Screen("agents", "Agents", Icons.Default.Group)
     data object Chat : Screen("chat", "Chat", Icons.Default.Chat)
     data object Account : Screen("account", "Account", Icons.Default.Person)
@@ -96,6 +97,10 @@ fun SagecoApp(
                     onBack = { navController.popBackStack() },
                     onPropertyClick = { navId -> navController.navigate("property/$navId") }
                 )
+            }
+            // FIX #1: Added missing "brokers" route — was causing crash when tapping "Become a Broker"
+            composable("brokers") {
+                BrokersScreen()
             }
             composable("agents") {
                 AgentsScreen(savedAgentId = savedAgentId, onSaveAgentId = onSaveAgentId)

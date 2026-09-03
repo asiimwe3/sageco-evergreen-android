@@ -31,8 +31,14 @@ fun ChatScreen() {
     var input by remember { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    // FIX #8: Account for typing indicator when scrolling
+    LaunchedEffect(messages.size, sending) {
+        if (sending) {
+            // Scroll to the typing indicator (last item)
+            listState.animateScrollToItem(messages.size)
+        } else if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.lastIndex)
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().background(OffWhite)) {
