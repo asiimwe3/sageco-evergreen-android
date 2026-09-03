@@ -43,18 +43,18 @@ jobs:
       - name: Build Debug APK
         if: ${{ env.KEYSTORE_BASE64 == '' }}
         working-directory: property-masters
-        run: ./gradlew assembleDebug || gradle assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Build Signed Release APK
         if: ${{ env.KEYSTORE_BASE64 != '' }}
         working-directory: property-masters
-        run: ./gradlew assembleRelease || gradle assembleRelease
+        run: ./gradlew assembleRelease
 
       - name: Upload Debug APK
         if: ${{ env.KEYSTORE_BASE64 == '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: sageco-evergreen-android-debug-apk
+          name: sageco-evergreen-android-debug
           path: property-masters/app/build/outputs/apk/debug/*.apk
           retention-days: 30
 
@@ -62,6 +62,6 @@ jobs:
         if: ${{ env.KEYSTORE_BASE64 != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: sageco-evergreen-android-release-apk
+          name: sageco-evergreen-android-release
           path: property-masters/app/build/outputs/apk/release/*.apk
           retention-days: 30
