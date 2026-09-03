@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: property-masters
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,19 +23,23 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
 
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/sageco.keystore
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build Release APK
-        working-directory: property-masters
         env:
           KEYSTORE_FILE: /tmp/sageco.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon -x lint
+        run: ./gradlew assembleRelease --no-daemon -x lint --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
