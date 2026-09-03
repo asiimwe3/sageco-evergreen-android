@@ -15,8 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
-class PlansViewModel : androidx.lifecycle.ViewModel() {
+class PlansViewModel : ViewModel() {
     var loading by mutableStateOf<String?>(null) // plan name being paid
         private set
 
@@ -35,7 +39,7 @@ class PlansViewModel : androidx.lifecycle.ViewModel() {
     fun subscribe(plan: String, price: Int, name: String, email: String, phone: String, onPayUrl: (String) -> Unit) {
         if (loading != null) return
         loading = plan
-        androidx.lifecycle.viewModelScope.launch {
+        viewModelScope.launch {
             val reference = "SUB-" + plan.uppercase() + "-" + System.currentTimeMillis()
             val pay = com.propertymasters.app.data.repository.SupabaseRepository.initiatePayment(
                 amount = price.toDouble(),
