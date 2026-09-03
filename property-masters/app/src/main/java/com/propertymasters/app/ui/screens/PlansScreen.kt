@@ -16,9 +16,57 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+class PlansViewModel : androidx.lifecycle.ViewModel() {
+    var loading by mutableStateOf<String?>(null) // plan name being paid
+        private set
+
+    // Same details the website's subscribe page collects
+    var fullName by mutableStateOf("")
+    var email by mutableStateOf("")
+    var phone by mutableStateOf("")
+
+    fun detailsValid(): Boolean =
+        fullName.isNotBlank() && email.contains("@") && phone.isNotBlank()
+
+    /**
+     * Subscribe to a broker plan — identical flow to the website:
+     * PesaPal payment + subscription intent recorded on the website.
+     */
+    fun subscribe(plan: String, price: Int, name: String, email: String, phone: String, onPayUrl: (String) -> Unit) {
+        if (loading != null) return
+        loading = plan
+        androidx.lifecycle.viewModelScope.launch {
+            val reference = "SUB-" + plan.uppercase() + "-" + System.currentTimeMillis()
+            val pay = com.propertymasters.app.data.repository.SupabaseRepository.initiatePayment(
+                amount = price.toDouble(),
+                description = "SAGECO " + plan.replaceFirstChar { it.uppercase() } + " Plan — Monthly",
+                email = email,
+                phone = phone,
+                firstName = name.substringBefore(" "),
+                lastName = name.substringAfter(" ", ""),
+                reference = reference,
+                callbackUrl = com.propertymasters.app.data.repository.SupabaseRepository.SITE_URL +
+                    "/subscription-success?ref=" + reference + "&plan=" + plan
+            )
+            com.propertymasters.app.data.repository.SupabaseRepository.createSubscriptionIntent(
+                plan = plan.lowercase(),
+                amountUgx = price,
+                pesapalRef = reference,
+                fullName = name,
+                email = email,
+                phone = phone
+            )
+            loading = null
+            pay.onSuccess(onPayUrl)
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlansScreen(onBack: () -> Unit) {
+    val vm: PlansViewModel = viewModel()
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val sagecoTeal = Color(0xFF0F766E)
     val sagecoLight = Color(0xFFCCFBF1)
 
@@ -43,6 +91,40 @@ fun PlansScreen(onBack: () -> Unit) {
         ) {
             Text("Choose Your Plan", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = sagecoTeal)
             Text("Premium broker features for listing properties across Uganda.", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(top = 4.dp, bottom = 16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = sagecoLight)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("Your Details", fontWeight = FontWeight.Bold, color = sagecoTeal, fontSize = 15.sp)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = vm.fullName,
+                        onValueChange = { vm.fullName = it },
+                        label = { Text("Full name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = vm.email,
+                        onValueChange = { vm.email = it },
+                        label = { Text("Email") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = vm.phone,
+                        onValueChange = { vm.phone = it },
+                        label = { Text("Phone (MoMo number)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            }
 
             plans.forEach { plan ->
                 Card(
@@ -69,6 +151,27 @@ fun PlansScreen(onBack: () -> Unit) {
                         if (plan.popular) {
                             Spacer(Modifier.height(4.dp))
                             AssistChip(onClick = {}, label = { Text("Most Popular", fontSize = 10.sp) }, colors = AssistChipDefaults.assistChipColors(containerColor = sagecoTeal, labelColor = Color.White))
+                        }
+                        if (plan.price > 0) {
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = {
+                                    vm.subscribe(plan.name.lowercase(), plan.price,
+                                        name = vm.fullName, email = vm.email, phone = vm.phone) { url ->
+                                        ctx.startActivity(
+                                            android.content.Intent(
+                                                android.content.Intent.ACTION_VIEW,
+                                                android.net.Uri.parse(url)
+                                            )
+                                        )
+                                    }
+                                },
+                                enabled = vm.detailsValid() && vm.loading == null,
+                                colors = ButtonDefaults.buttonColors(containerColor = sagecoTeal),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(if (vm.loading == plan.name.lowercase()) "Starting payment…" else "Subscribe — UGX " + "%,.0f".format(plan.price.toDouble()))
+                            }
                         }
                         Spacer(Modifier.height(12.dp))
                         plan.features.forEach { feature ->

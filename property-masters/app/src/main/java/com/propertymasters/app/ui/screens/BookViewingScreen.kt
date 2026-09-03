@@ -67,14 +67,36 @@ class BookViewingViewModel : ViewModel() {
     fun canSubmit(): Boolean =
         name.isNotBlank() && email.isNotBlank() && phone.isNotBlank() && date.isNotBlank() && timeSlot.isNotBlank()
 
-    fun submit(propertyTitle: String, propertyId: String?) {
+    var payUrl by mutableStateOf<String?>(null)
+        private set
+
+    /**
+     * Same booking + payment flow as the website:
+     * 1. Start a PesaPal payment for the booking fee (same gateway account)
+     * 2. Save the booking to the website's bookings table
+     * 3. Hand back the PesaPal checkout URL to open in the browser
+     */
+    fun submit(propertyTitle: String, propertyId: String?, onPayUrl: (String) -> Unit = {}) {
         if (!canSubmit() || loading) return
         loading = true
         status = "processing"
         viewModelScope.launch {
             val reference = "${bookingType.uppercase()}-${propertyId ?: "GEN"}-${System.currentTimeMillis()}"
             val fee = getCurrentFee()
-            val success = SupabaseRepository.saveBooking(
+            val callback = SupabaseRepository.SITE_URL +
+                "/payment-success?order=" + reference +
+                "&property=" + (propertyId ?: "") + "&type=" + bookingType
+            val payResult = SupabaseRepository.initiatePayment(
+                amount = fee,
+                description = "${bookingType.replaceFirstChar { it.uppercase() }} Fee — $propertyTitle",
+                email = email,
+                phone = phone,
+                firstName = name.substringBefore(" "),
+                lastName = name.substringAfter(" ", ""),
+                reference = reference,
+                callbackUrl = callback
+            )
+            val saved = SupabaseRepository.saveBooking(
                 reference = reference,
                 propertyId = propertyId,
                 propertyTitle = propertyTitle,
@@ -90,7 +112,13 @@ class BookViewingViewModel : ViewModel() {
                 brokerShare = 0.0
             )
             loading = false
-            status = if (success) "success" else "error"
+            if (saved && payResult.isSuccess) {
+                payUrl = payResult.getOrNull()
+                status = "success"
+                payUrl?.let(onPayUrl)
+            } else {
+                status = "error"
+            }
         }
     }
 }
@@ -127,12 +155,27 @@ fun BookViewingScreen(
             ) {
                 Icon(Icons.Filled.Check, contentDescription = null, tint = sagecoTeal, modifier = Modifier.size(80.dp))
                 Spacer(Modifier.height(16.dp))
-                Text("Booking Confirmed!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = sagecoTeal)
+                Text("Booking Saved!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = sagecoTeal)
                 Spacer(Modifier.height(8.dp))
-                Text("Our team will contact you within 24 hours to confirm the exact time and location.", color = Color.Gray, fontSize = 14.sp)
+                Text("Complete the PesaPal payment to confirm your slot. Our team will contact you within 24 hours.", color = Color.Gray, fontSize = 14.sp)
                 Spacer(Modifier.height(8.dp))
                 Text("WhatsApp: 0750 414 366", color = sagecoTeal, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(24.dp))
+                vm.payUrl?.let { url ->
+                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                    Button(
+                        onClick = {
+                            ctx.startActivity(
+                                android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(url)
+                                )
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))
+                    ) { Text("Pay UGX %,.0f".format(vm.getCurrentFee())) }
+                    Spacer(Modifier.height(12.dp))
+                }
                 Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = sagecoTeal)) {
                     Text("Done")
                 }

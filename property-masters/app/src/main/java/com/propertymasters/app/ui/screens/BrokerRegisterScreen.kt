@@ -36,12 +36,16 @@ class BrokerRegisterViewModel : ViewModel() {
 
     fun canSubmit() = fullName.isNotBlank() && email.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
 
+    var brokerId by mutableStateOf<String?>(null)
+        private set
+    var payUrl by mutableStateOf<String?>(null)
+
     fun submit() {
         if (!canSubmit() || loading) return
         loading = true
         status = ""
         viewModelScope.launch {
-            val success = SupabaseRepository.registerBroker(
+            val (success, id) = SupabaseRepository.registerBroker(
                 fullName = fullName,
                 email = email,
                 phone = phone,
@@ -51,9 +55,38 @@ class BrokerRegisterViewModel : ViewModel() {
                 experienceYears = experienceYears.toIntOrNull() ?: 0
             )
             loading = false
-            status = if (success) "success" else "error"
             if (success) {
-                fullName = ""; email = ""; phone = ""; location = ""; bio = ""; experienceYears = ""
+                brokerId = id
+                status = "success"
+            } else {
+                status = "error"
+            }
+        }
+    }
+
+    /**
+     * Broker activation payment — exactly the same flow and PesaPal account
+     * as the website's broker registration (UGX 20,000 activation fee).
+     */
+    fun payActivation(onUrlReady: (String) -> Unit) {
+        if (loading || brokerId == null) return
+        loading = true
+        viewModelScope.launch {
+            val reference = "BROKER-ACT-${brokerId!!.take(8)}-${System.currentTimeMillis()}"
+            val result = SupabaseRepository.initiatePayment(
+                amount = 20000.0,
+                description = "SAGECO Broker Activation Fee",
+                email = email,
+                phone = phone,
+                firstName = fullName.substringBefore(" "),
+                lastName = fullName.substringAfter(" ", ""),
+                reference = reference,
+                callbackUrl = SupabaseRepository.SITE_URL + "/broker-payment-success?broker_id=" + brokerId + "&type=activation"
+            )
+            loading = false
+            result.onSuccess { url ->
+                payUrl = url
+                onUrlReady(url)
             }
         }
     }
@@ -86,6 +119,27 @@ fun BrokerRegisterScreen(onBack: () -> Unit) {
                 Text("Registration Submitted!", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = sagecoTeal)
                 Text("Your application is pending review. We'll contact you within 48 hours.", color = Color.Gray, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 Spacer(Modifier.height(24.dp))
+                if (vm.loading) {
+                    CircularProgressIndicator(color = sagecoTeal)
+                } else {
+                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                    Button(
+                        onClick = {
+                            vm.payActivation { url ->
+                                ctx.startActivity(
+                                    android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse(url)
+                                    )
+                                )
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))
+                    ) { Text("Pay Activation — UGX 20,000") }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Same PesaPal account as the website — MTN MoMo, Airtel Money or Card.", fontSize = 11.sp, color = Color.Gray, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+                Spacer(Modifier.height(12.dp))
                 Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = sagecoTeal)) { Text("Done") }
             }
             return@Scaffold
