@@ -12,7 +12,7 @@ import coil.memory.MemoryCache
  */
 class SagecoApp : Application(), ImageLoaderFactory {
 
-    override fun newImageLoader(): ImageLoader =
+    override fun newImageLoader(): ImageLoader = try {
         ImageLoader.Builder(this)
             .memoryCache {
                 MemoryCache.Builder(this)
@@ -28,4 +28,8 @@ class SagecoApp : Application(), ImageLoaderFactory {
             .crossfade(true)
             .respectCacheHeaders(false)
             .build()
+    } catch (e: Exception) {
+        // Never let cache config kill the app — fall back to defaults
+        ImageLoader.Builder(this).crossfade(true).build()
+    }
 }

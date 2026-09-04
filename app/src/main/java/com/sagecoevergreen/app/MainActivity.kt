@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.sagecoevergreen.app.data.ApiClient
+import com.sagecoevergreen.app.data.CrashHandler
+import com.sagecoevergreen.app.ui.screens.CrashReportScreen
 import com.sagecoevergreen.app.data.AppUpdater
 import com.sagecoevergreen.app.ui.SagecoApp
 import com.sagecoevergreen.app.ui.screens.UpdateScreen
@@ -30,11 +32,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CrashHandler.install(this)
         enableEdgeToEdge()
         setContent {
             SagecoTheme {
                 val scope = rememberCoroutineScope()
                 var savedAgentId by remember { mutableStateOf<String?>(null) }
+                var lastCrash by remember { mutableStateOf<String?>(null) }
+                LaunchedEffect(Unit) {
+                    lastCrash = CrashHandler.getLastCrash(applicationContext)
+                }
 
                 // One-time version check — gates the whole app on freshness
                 LaunchedEffect(Unit) {
@@ -59,7 +66,12 @@ class MainActivity : ComponentActivity() {
                     savedAgentId = prefs[AGENT_ID_KEY]
                 }
 
-                when (AppUpdater.checked) {
+                if (lastCrash != null) {
+                    CrashReportScreen(
+                        report = lastCrash!!,
+                        onDismiss = { lastCrash = null }
+                    )
+                } else when (AppUpdater.checked) {
                     null -> {
                         // Checking version — brief branded splash
                         Box(
