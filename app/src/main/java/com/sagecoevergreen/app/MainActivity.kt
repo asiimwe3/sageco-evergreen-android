@@ -41,9 +41,16 @@ class MainActivity : ComponentActivity() {
                 var lastCrash by remember { mutableStateOf<String?>(null) }
                 LaunchedEffect(Unit) {
                     lastCrash = CrashHandler.getLastCrash(applicationContext)
+                    // Retry sending any unsent crash report from last session
+                    lastCrash?.let { CrashHandler.sendRemotely(applicationContext, it) }
                 }
 
                 // One-time version check — gates the whole app on freshness
+                LaunchedEffect(Unit) {
+                    // Safety net: never stay stuck on the splash longer than 10s
+                    kotlinx.coroutines.delay(10000)
+                    if (AppUpdater.checked == null) AppUpdater.checked = false
+                }
                 LaunchedEffect(Unit) {
                     try {
                         val latest = ApiClient.checkVersion()
