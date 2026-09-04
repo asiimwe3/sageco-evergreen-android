@@ -15,7 +15,7 @@ android {
         // identifiable and auto-update/version checks work correctly.
         // Falls back to 27 for local/manual builds.
         versionCode = (System.getenv("APP_VERSION_CODE")?.toIntOrNull()) ?: 27
-        versionName = "4.0.0"
+        versionName = "4.1.0"
 
         buildConfigField("int", "BUILD_VERSION_CODE", "$versionCode")
         buildConfigField("String", "BUILD_VERSION_NAME", "\"$versionName\"")
