@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sagecoevergreen.app.data.ApiClient
+import com.sagecoevergreen.app.data.DiagnosticsCollector
 import com.sagecoevergreen.app.data.AppVersion
 import com.sagecoevergreen.app.ui.theme.*
 import kotlinx.coroutines.launch
@@ -119,6 +120,14 @@ fun AccountScreen(
         ) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://sageco-evergreen-co.vercel.app/plans"))
             context.startActivity(intent)
+        }
+
+        AccountMenuItem(
+            icon = Icons.Default.BugReport,
+            title = "Send Error Logs",
+            subtitle = "Share app diagnostics with the developer"
+        ) {
+            DiagnosticsCollector.shareToWhatsApp(context)
         }
 
         AccountMenuItem(
